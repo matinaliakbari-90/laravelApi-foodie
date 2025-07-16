@@ -18,7 +18,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock* ./
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# 👇 اجرای composer همراه با نمایش ارورهای احتمالی
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || (cat /root/.composer/cache/logs/* || true)
 
 COPY . .
 
