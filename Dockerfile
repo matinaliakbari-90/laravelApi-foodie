@@ -7,20 +7,24 @@ WORKDIR /var/www
 # نصب پکیج‌های لازم سیستم
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev mysql-client \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # نصب Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# انتقال فایل‌های پروژه به کانتینر
-COPY . .
+# فقط فایل‌های composer رو اول کپی کن برای کش بهتر
+COPY composer.json composer.lock* ./
 
 # نصب پکیج‌های PHP از طریق Composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# مجوز دهی به دایرکتوری‌های لازم
-RUN chmod -R 775 storage bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache
+# حالا باقی فایل‌ها رو کپی کن
+COPY . .
+
+# تنظیم مجوز برای فولدرهای مورد نیاز
+RUN chown -R www-data:www-data storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
 # اجرای دستورهای Artisan مهم بعد از نصب
 RUN php artisan key:generate && \
@@ -33,4 +37,3 @@ EXPOSE 8000
 
 # اجرای سرور لاراول
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
-
