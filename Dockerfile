@@ -1,13 +1,36 @@
-# Dockerfile
+# مرحله اول: استفاده از PHP 8.2 CLI
+FROM php:8.2-cli
 
-FROM laravelsail/php82-composer
+# تنظیم دایرکتوری کاری
+WORKDIR /var/www
 
-WORKDIR /var/www/html
+# نصب پکیج‌های لازم سیستم
+RUN apt-get update && apt-get install -y \
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev mysql-client \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# نصب Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# انتقال فایل‌های پروژه به کانتینر
 COPY . .
 
-RUN apt-get update \
-    && apt-get install -y unzip zip git curl libzip-dev libpng-dev \
-    && docker-php-ext-install pdo_mysql zip gd
+# نصب پکیج‌های PHP از طریق Composer
+RUN composer install --no-dev --optimize-autoloader
 
+# مجوز دهی به دایرکتوری‌های لازم
+RUN chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
+
+# اجرای دستورهای Artisan مهم بعد از نصب
+RUN php artisan key:generate && \
+    php artisan migrate --force && \
+    php artisan storage:link && \
+    php artisan config:cache
+
+# باز کردن پورت برای سرور Laravel
+EXPOSE 8000
+
+# اجرای سرور لاراول
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+
