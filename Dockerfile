@@ -1,7 +1,6 @@
-# Use official PHP image with Apache
 FROM php:8.2-apache
 
-# Install system dependencies
+# نصب پکیج‌های لازم
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -11,28 +10,26 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libzip-dev \
-    libpq-dev \
-    libmcrypt-dev \
-    mysql-client
+    mysql-client \
+    libpq-dev
 
-# Install PHP extensions
+# نصب اکستنشن‌های PHP
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Enable Apache Rewrite Module
+# فعال‌سازی mod_rewrite در Apache
 RUN a2enmod rewrite
 
-# Set working directory
+# تنظیم پوشه اصلی پروژه
 WORKDIR /var/www/html
 
-# Copy app files
+# کپی فایل‌های پروژه
 COPY . .
 
-# Install Composer
+# نصب Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set permissions
+# دسترسی‌ها
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage
 
-# Expose port
 EXPOSE 80
