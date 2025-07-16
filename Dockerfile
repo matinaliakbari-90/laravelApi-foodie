@@ -2,8 +2,14 @@ FROM php:8.2-cli
 
 WORKDIR /var/www/html
 
+RUN apt-get update && apt-get install -y apt-transport-https lsb-release ca-certificates curl
+
+RUN curl -fsSL https://packages.sury.org/php/apt.gpg | tee /etc/apt/trusted.gpg.d/php.gpg
+
+RUN echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
+
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libxml2-dev libzip-dev default-mysql-client && \
+    git curl zip unzip libpng-dev libxml2-dev libzip-dev default-mysql-client libonig-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
