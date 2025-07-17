@@ -18,13 +18,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock* ./
 
-# 👇 اجرای composer همراه با نمایش ارورهای احتمالی
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || (cat /root/.composer/cache/logs/* || true)
 
 COPY . .
 
 RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 8000
+# پاک‌سازی کش‌ها و اجرای برنامه
+EXPOSE 8080
 
-CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+CMD sh -c "php artisan migrate --force && php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=8080"
